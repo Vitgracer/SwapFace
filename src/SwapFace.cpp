@@ -350,16 +350,6 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 		cv::Mat leftFaceImg1 = cv::Mat(lpComb[i], rectFaceR);
 		cv::Mat rightFaceImg1 = cv::Mat(lpComb[i], rectFaceL);
 
-		cv::Mat leftFaceImg = cv::Mat(lpSrc[i], rectFaceL);
-		cv::Mat rightFaceImg = cv::Mat(lpSrc[i], rectFaceR);
-
-		cv::resize(leftFaceImg, leftFaceImg, cv::Size(rectFaceR.width, rectFaceR.height));
-		cv::resize(rightFaceImg, rightFaceImg, cv::Size(rectFaceL.width, rectFaceL.height));
-
-		cv::Mat combUn = lpSrc[i].clone();
-		leftFaceImg.copyTo(combUn(rectFaceR), maskFaceR);
-		rightFaceImg.copyTo(combUn(rectFaceL), maskFaceL);
-
 		cv::Mat combUn1 = lpSrc[i].clone();
 		cv::Mat element2;
 		if (i == 1) element2 = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
@@ -383,8 +373,7 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 		usualStitched = up + laplStitched[i];
 	}
 	usualStitched.convertTo(usualStitched, CV_8UC3, 255);
-	cv::resize(usualStitched, usualStitched, cv::Size(fullFrame.cols, fullFrame.rows));
-	resultFrame = usualStitched.clone();
+	cv::resize(usualStitched, resultFrame, cv::Size(fullFrame.cols, fullFrame.rows));	
 }
 
 //////////////////////////////////
