@@ -11,7 +11,9 @@ std::vector<cv::Rect> SwapFace::getFaces() {
 	face_cascade.load(CASCADE_PATH);
 	
 	std::vector<cv::Rect> faces;
-	face_cascade.detectMultiScale(resizedFrame, faces, 1.1, 2, 2, cv::Size(100, 100));
+	face_cascade.detectMultiScale(resizedFrame, faces, 
+								  SCALE_FACTOR, MIN_NEIGHBOURS, 
+								  2, cv::Size(WINDOW_SIZE, WINDOW_SIZE));
 
 #if VISUALIZATION
 	cv::Mat facesVisualization = resizedFrame.clone();
