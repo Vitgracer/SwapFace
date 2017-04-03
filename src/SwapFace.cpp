@@ -162,6 +162,9 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	cv::merge(bgr, 3, face);
 
 	cv::Mat resMask = segmentFace(face);
+	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
+	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
+	cv::threshold(resMask, resMask, 128, 255, cv::THRESH_BINARY);
 
 	int maxLength = 0;
 	int maxInd = 0;
@@ -182,10 +185,6 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 
 	resMask = 0;
 	drawContours(resMask, contours, maxInd, cv::Scalar(255), CV_FILLED);
-
-	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
-	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
-	cv::threshold(resMask, resMask, 128, 255, cv::THRESH_BINARY);
 
 	cv::Mat restrictionEllipse = cv::Mat(resMask.rows, resMask.cols, CV_8UC1, cv::Scalar(0));
 	cv::ellipse(restrictionEllipse, cv::RotatedRect(cv::Point(resMask.cols / 2, resMask.rows / 2), cv::Size(resMask.cols - 6, resMask.rows - 6), 0), cv::Scalar(255), -1);
@@ -245,24 +244,6 @@ cv::Point SwapFace::findClosesPoint(cv::Point& p, std::vector<cv::Point>& contou
 	return contour[minInd];
 }
 
-/////////////////////////////////
-// Brief description: 
-// color interpolation procedure 
-/////////////////////////////////
-cv::Scalar SwapFace::interpolateColor(cv::Point p, cv::Point closestToSrc, cv::Point closestToDst, cv::Vec3b colorSrc, cv::Vec3b colorDst) {
-	cv::Scalar color;
-	for (int channel = 0; channel < 3; channel++) {
-		float dist = getDist(closestToDst, closestToSrc);
-		float distToSrc = getDist(p, closestToSrc);
-		float distToDst = getDist(closestToDst, p);
-		float colorDist = abs(colorSrc.val[channel] - colorDst.val[channel]);
-
-		color[channel] = colorSrc.val[channel];
-	}
-
-	return color;
-}
-
 //////////////////////
 // Brief description: 
 // inpainting 
@@ -271,12 +252,6 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	cv::resize(imgSrc, imgSrc, imgDst.size(), cv::INTER_NEAREST);
 	cv::resize(maskSrc, maskSrc, maskDst.size(), cv::INTER_NEAREST);
 	maskSrc *= 255;
-
-	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11, 11));
-	morphologyEx(maskSrc, maskSrc, cv::MORPH_ERODE, element);
-	morphologyEx(maskDst, maskDst, cv::MORPH_ERODE, element);
-
-	//cv::Mat fitted = fitOneImgToAnother(imgSrc, imgDst, maskSrc, maskDst);
 
 	cv::Mat cuttedFace = cv::Mat(imgSrc.size(), CV_8UC1);
 	imgSrc.copyTo(cuttedFace, maskSrc);
@@ -298,9 +273,7 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 			if (stretchedFace.at<cv::Vec3b>(curPoint) == cv::Vec3b(255, 255, 255)) {
 
 				cv::Point closestToSrc = findClosesPoint(curPoint, contoursSrc[0]);
-				//cv::Point closestToDst = findClosesPoint(curPoint, contoursDst[0]);
-
-				//cv::Scalar color = interpolateColor(curPoint, closestToSrc, closestToDst, cuttedFace.at<cv::Vec3b>(closestToSrc), imgDst.at<cv::Vec3b>(closestToDst));
+				
 				cv::Scalar color = cv::Scalar(cuttedFace.at<cv::Vec3b>(closestToSrc).val[0],
 					cuttedFace.at<cv::Vec3b>(closestToSrc).val[1],
 					cuttedFace.at<cv::Vec3b>(closestToSrc).val[2]);

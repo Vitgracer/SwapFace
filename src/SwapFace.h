@@ -22,7 +22,6 @@ private:
 
 	float getDist(cv::Point& p1, cv::Point& p2);
 	cv::Point findClosesPoint(cv::Point& p, std::vector<cv::Point>& contour);
-	cv::Scalar interpolateColor(cv::Point p, cv::Point closestToSrc, cv::Point closestToDst, cv::Vec3b colorSrc, cv::Vec3b colorDst);
 	cv::Mat stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst);
 
 	std::pair<cv::Mat, cv::Mat> fitImagesToEachOther(cv::Mat leftImg, cv::Mat rightImg, cv::Mat leftMask, cv::Mat rightMask);
