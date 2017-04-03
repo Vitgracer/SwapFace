@@ -14,7 +14,7 @@ int main() {
 		cv::imshow("input", frame);
 
 		SwapFace faceSwapper = SwapFace(frame);
-		cv::Mat swappedFaces = faceSwapper.swapFaces();
+		cv::Mat swappedFaces = faceSwapper.run();
 		cv::imshow("swappedFaces", swappedFaces);
 		
 		// ESC to stop
