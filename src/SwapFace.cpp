@@ -89,8 +89,11 @@ std::vector<cv::Mat> SwapFace::buildLaplPyr(std::vector<cv::Mat> gaussPyr, int p
 	return laplPyr;
 }
 
-
-cv::Mat segmentFace(cv::Mat src, cv::Mat ellipse) {
+///////////////////////////////////////
+// Brief description: 
+// KMeans using to extract skin region 
+///////////////////////////////////////
+cv::Mat SwapFace::segmentFace(cv::Mat src, cv::Mat ellipse) {
 	cv::Mat samples(src.rows * src.cols, 3, CV_32F);
 	for (int y = 0; y < src.rows; y++) {
 		uchar* dataEllipse = ellipse.data + ellipse.step.buf[0] * y;
@@ -138,7 +141,11 @@ cv::Mat segmentFace(cv::Mat src, cv::Mat ellipse) {
 	return resMask;
 }
 
-cv::Mat findMask(cv::Mat face) {
+///////////////////////////////////////
+// Brief description: 
+// Find sking region and postprocess it 
+///////////////////////////////////////
+cv::Mat SwapFace::findMask(cv::Mat face) {
 	int srcW = face.cols;
 	int srcH = face.rows;
 	cv::resize(face, face, cv::Size(srcW / 4, srcH / 4), 0, 0, cv::INTER_NEAREST);
@@ -184,24 +191,12 @@ cv::Mat findMask(cv::Mat face) {
 	return resMask;
 }
 
-void optimizeImage(cv::Mat& img, cv::Rect& lFace, cv::Rect& rFace, const int w = 640, const int h = 480) {
-
-	float koefW = (float)img.cols / w;
-	float koefH = (float)img.rows / h;
-	cv::resize(img, img, cv::Size(w, h));
-
-	lFace.x = lFace.x / koefW;
-	lFace.y = lFace.y / koefH;
-	lFace.width = lFace.width / koefW;
-	lFace.height = lFace.height / koefH;
-
-	rFace.x = rFace.x / koefW;
-	rFace.y = rFace.y / koefH;
-	rFace.width = rFace.width / koefW;
-	rFace.height = rFace.height / koefH;
-}
-
-cv::Mat copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
+///////////////////////////////////////
+// Brief description: 
+// Function to copy one face to another 
+// with some restrictions 
+///////////////////////////////////////
+cv::Mat SwapFace::copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
 	cv::Mat result = imgDst.clone();
 
 	for (int y = 0; y < imgSrc.rows; y++) {
@@ -218,11 +213,19 @@ cv::Mat copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	return result;
 }
 
-float getDist(cv::Point& p1, cv::Point& p2) {
+///////////////////////////////////////
+// Brief description: 
+// get distance between two points 
+///////////////////////////////////////
+float SwapFace::getDist(cv::Point& p1, cv::Point& p2) {
 	return sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
 }
 
-cv::Point findClosesPoint(cv::Point& p, std::vector<cv::Point>& contour) {
+///////////////////////////////////////////
+// Brief description: 
+// get closest point to point P in contour 
+///////////////////////////////////////////
+cv::Point SwapFace::findClosesPoint(cv::Point& p, std::vector<cv::Point>& contour) {
 	float mindist = 10000;
 	int minInd = 0;
 
@@ -239,7 +242,11 @@ cv::Point findClosesPoint(cv::Point& p, std::vector<cv::Point>& contour) {
 	return contour[minInd];
 }
 
-cv::Scalar interpolateColor(cv::Point p, cv::Point closestToSrc, cv::Point closestToDst, cv::Vec3b colorSrc, cv::Vec3b colorDst) {
+/////////////////////////////////
+// Brief description: 
+// color interpolation procedure 
+/////////////////////////////////
+cv::Scalar SwapFace::interpolateColor(cv::Point p, cv::Point closestToSrc, cv::Point closestToDst, cv::Vec3b colorSrc, cv::Vec3b colorDst) {
 	cv::Scalar color;
 	for (int channel = 0; channel < 3; channel++) {
 		float dist = getDist(closestToDst, closestToSrc);
@@ -248,19 +255,16 @@ cv::Scalar interpolateColor(cv::Point p, cv::Point closestToSrc, cv::Point close
 		float colorDist = abs(colorSrc.val[channel] - colorDst.val[channel]);
 
 		color[channel] = colorSrc.val[channel];
-
-		/*if (distToSrc > distToDst) {
-		color[channel] = colorDst.val[channel];
-		}
-		else color[channel] = colorSrc.val[channel];*/
-
-		//color[channel] = (colorSrc.val[channel] * distToDst + colorDst.val[channel] * distToSrc) / dist;
 	}
 
 	return color;
 }
 
-cv::Mat stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
+//////////////////////
+// Brief description: 
+// inpainting 
+//////////////////////
+cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
 	cv::resize(imgSrc, imgSrc, imgDst.size(), cv::INTER_NEAREST);
 	cv::resize(maskSrc, maskSrc, maskDst.size(), cv::INTER_NEAREST);
 	maskSrc *= 255;
@@ -307,17 +311,15 @@ cv::Mat stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat mas
 	cv::GaussianBlur(stretchedClone, stretchedClone, cv::Size(11, 11), 3, 3);
 	stretchedClone.copyTo(stretchedFace, blackMask);
 
-	//cv::Mat element2 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
-	//morphologyEx(blackMask, blackMask, cv::MORPH_DILATE, element2);
-
-	//cv::GaussianBlur(blackMask, blackMask, cv::Size(5, 5), 2, 2);
-	//morphologyEx(blackMask, blackMask, cv::MORPH_ERODE, element2);
-
-	// ÂÅÐÍÓÒÜ ÊÎÐÐÅÊÒÓÍÞ ÌÀÑÊÓ!"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! À ïîòîì â ïèðàìèäàõ åå ó÷èòûâàòü
 	return stretchedFace;
 }
 
-std::pair<cv::Mat, cv::Mat> fitImagesToEachOther(cv::Mat leftImg, cv::Mat rightImg, cv::Mat leftMask, cv::Mat rightMask) {
+///////////////////////////////////////////
+// Brief description: 
+// fit left image to right with right mask 
+// and the same for the right image 
+//////////////////////////////////////////
+std::pair<cv::Mat, cv::Mat> SwapFace::fitImagesToEachOther(cv::Mat leftImg, cv::Mat rightImg, cv::Mat leftMask, cv::Mat rightMask) {
 	cv::Mat leftFaceFitted = stretchFace(leftImg, rightImg, leftMask, rightMask);
 	cv::Mat rightFaceFitted = stretchFace(rightImg, leftImg, rightMask, leftMask);
 
@@ -328,8 +330,8 @@ std::pair<cv::Mat, cv::Mat> fitImagesToEachOther(cv::Mat leftImg, cv::Mat rightI
 // Brief description: 
 // main algorithm to swap faces 
 ////////////////////////////////
-void SwapFace::swapFace(cv::Rect rect1, cv::Rect rect2) {
-	cv::Mat img = src.clone();	
+void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
+	cv::Mat img = resizedFrame.clone();	
 
 	cv::Mat leftFaceImg = cv::Mat(img, lFace);
 	cv::Mat rightFaceImg = cv::Mat(img, rFace);
