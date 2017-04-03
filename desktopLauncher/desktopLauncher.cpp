@@ -24,7 +24,7 @@ int main() {
 	cv::Mat inputFrame = cv::imread(IMAGE_PATH);
 
 	SwapFace faceSwapper = SwapFace(inputFrame);
-	cv::Mat swappedFaces = faceSwapper.swapFaces();
+	cv::Mat swappedFaces = faceSwapper.run();
 
 #endif
 	return 0;
