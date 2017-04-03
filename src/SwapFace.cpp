@@ -155,12 +155,6 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	int srcH = face.rows;
 	cv::resize(face, face, cv::Size(srcW / 4, srcH / 4), 0, 0, cv::INTER_NEAREST);
 
-	cv::cvtColor(face, face, cv::COLOR_BGR2YCrCb);
-	cv::Mat bgr[3];
-	split(face, bgr);
-	bgr[0] = 0;
-	cv::merge(bgr, 3, face);
-
 	cv::Mat resMask = segmentFace(face);
 	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
 	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
@@ -311,6 +305,7 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 	cv::Mat leftFaceImg = cv::Mat(resizedFrame, lFace);
 	cv::Mat rightFaceImg = cv::Mat(resizedFrame, rFace);
 
+	//leftFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/inputForMask2.png");
 	cv::Mat leftMask = findMask(leftFaceImg);
 	cv::Mat rightMask = findMask(rightFaceImg);
 
