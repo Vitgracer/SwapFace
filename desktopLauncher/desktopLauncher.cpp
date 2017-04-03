@@ -13,17 +13,19 @@ int main() {
 		if (frame.empty()) break;
 		cv::imshow("input", frame);
 
-		SwapFace engine = SwapFace(frame);
-		engine.run();
-
+		SwapFace faceSwapper = SwapFace(frame);
+		cv::Mat swappedFaces = faceSwapper.swapFaces();
+		cv::imshow("swappedFaces", swappedFaces);
+		
 		// ESC to stop
 		if (cv::waitKey(1) == 27) break;
 	}
 #else
 	cv::Mat inputFrame = cv::imread(IMAGE_PATH);
 
-	SwapFace engine = SwapFace(inputFrame);
-	engine.run();
+	SwapFace faceSwapper = SwapFace(inputFrame);
+	cv::Mat swappedFaces = faceSwapper.swapFaces();
+
 #endif
 	return 0;
 }

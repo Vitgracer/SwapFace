@@ -13,5 +13,5 @@ public:
 
 	virtual ~SwapFace() {};
 
-	void run();
+	cv::Mat swapFaces();
 };

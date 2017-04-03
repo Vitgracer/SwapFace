@@ -7,6 +7,6 @@
 // Brief description: 
 // public funcion to run full code
 //////////////////////////////////
-void SwapFace::run() {
+cv::Mat SwapFace::swapFaces() {
 
 }
