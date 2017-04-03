@@ -180,6 +180,17 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	resMask = 0;
 	drawContours(resMask, contours, maxInd, cv::Scalar(255), CV_FILLED);
 
+	std::vector<cv::Point> hull;
+	cv::convexHull(contours[maxInd], hull);
+
+	if (hull.size() == 0) {
+		return resMask;
+	}
+
+	resMask = 0;
+	auto hullRes = std::vector<std::vector<cv::Point> >(1, hull);
+	drawContours(resMask, hullRes, 0, cv::Scalar(255), -1);
+
 	cv::Mat restrictionEllipse = cv::Mat(resMask.rows, resMask.cols, CV_8UC1, cv::Scalar(0));
 	cv::ellipse(restrictionEllipse, cv::RotatedRect(cv::Point(resMask.cols / 2, resMask.rows / 2), cv::Size(resMask.cols - 6, resMask.rows - 6), 0), cv::Scalar(255), -1);
 	cv::bitwise_and(restrictionEllipse, resMask, resMask);
