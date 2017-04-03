@@ -14,6 +14,13 @@ std::vector<cv::Rect> SwapFace::getFaces() {
 	std::vector<cv::Rect> faces;
 	face_cascade.detectMultiScale(resizedFrame, faces, 1.1, 2, 2, cv::Size(100, 100));
 
+#if VISUALIZATION
+	cv::Mat facesVisualization = resizedFrame.clone();
+	for (int i = 0; i < faces.size(); i++) {
+		cv::rectangle(facesVisualization, faces[i], cv::Scalar(255, 0, 255));
+	}
+#endif 
+
 	return faces;
 }
 
