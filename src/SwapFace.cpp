@@ -20,6 +20,7 @@ std::vector<cv::Rect> SwapFace::getFaces() {
 	for (int i = 0; i < faces.size(); i++) {
 		cv::rectangle(facesVisualization, faces[i], cv::Scalar(255, 0, 255));
 	}
+	cv::imshow("detected faces", facesVisualization);
 #endif 
 
 	return faces;
