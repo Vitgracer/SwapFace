@@ -4,7 +4,7 @@
 #ifdef VIDEO_MODE
 #define CAMERA_INDEX        (0)
 #else 
-#define IMAGE_PATH          "C:/Users/Alfred/Desktop/SwapFace/testData/1.jpg"
+#define IMAGE_PATH          "C:/Users/Alfred/Desktop/SwapFace/testData/3.jpg"
 #endif
 
 // resources 
