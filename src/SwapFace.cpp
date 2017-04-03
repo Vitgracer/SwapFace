@@ -205,8 +205,8 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	cv::resize(face, face, cv::Size(srcW / 4, srcH / 4), 0, 0, cv::INTER_NEAREST);
 
 	cv::Mat resMask = segmentFace(face);
-	cv::Mat updMask = processMask(face);
-	cv::bitwise_and(resMask, updMask, resMask);
+	//cv::Mat updMask = processMask(face);
+	//cv::bitwise_and(resMask, updMask, resMask);
 
 	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
 	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
@@ -255,8 +255,9 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 // Function to copy one face to another 
 // with some restrictions 
 ///////////////////////////////////////
-cv::Mat SwapFace::copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
+std::pair<cv::Mat, cv::Mat> SwapFace::copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst) {
 	cv::Mat result = imgDst.clone();
+	cv::Mat blackMask = cv::Mat(result.size(), CV_8UC1, cv::Scalar(0));
 
 	for (int y = 0; y < imgSrc.rows; y++) {
 		for (int x = 0; x < imgSrc.cols; x++) {
@@ -266,10 +267,14 @@ cv::Mat SwapFace::copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat 
 				if (maskSrc.at<uchar>(y, x) == 255) {
 					result.at<cv::Vec3b>(y, x) = imgSrc.at<cv::Vec3b>(y, x);
 				}
+				else {
+					blackMask.at<uchar>(y, x) = 255;
+				}
 			}
 		}
 	}
-	return result;
+
+	return std::make_pair(result, blackMask);
 }
 
 ///////////////////////////////////////
@@ -313,7 +318,9 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	cv::Mat cuttedFace = cv::Mat(imgSrc.size(), CV_8UC1);
 	imgSrc.copyTo(cuttedFace, maskSrc);
 
-	cv::Mat stretchedFace = copySrcToDstUsingMask(imgSrc, imgDst, maskSrc, maskDst);
+	auto stretched = copySrcToDstUsingMask(imgSrc, imgDst, maskSrc, maskDst);
+	cv::Mat stretchedFace = stretched.first;
+	cv::Mat blackMask = stretched.second;
 
 	std::vector<std::vector<cv::Point> > contoursSrc;
 	cv::findContours(maskSrc, contoursSrc, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
@@ -321,13 +328,11 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 		return imgSrc;
 	}
 
-	cv::Mat blackMask = cv::Mat(stretchedFace.size(), CV_8UC1, cv::Scalar(0));
-
 	for (int y = 0; y < stretchedFace.rows; y++) {
 		for (int x = 0; x < stretchedFace.cols; x++) {
 			cv::Point curPoint(x, y);
 
-			if (stretchedFace.at<cv::Vec3b>(curPoint) == cv::Vec3b(255, 255, 255)) {
+			if (blackMask.at<uchar>(y, x) == 255) {
 
 				cv::Point closestToSrc = findClosesPoint(curPoint, contoursSrc[0]);
 				
@@ -336,7 +341,6 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 					cuttedFace.at<cv::Vec3b>(closestToSrc).val[2]);
 
 				cv::circle(stretchedFace, curPoint, 0, color, -1);
-				cv::circle(blackMask, curPoint, 0, cv::Scalar(255), -1);
 			}
 		}
 	}
@@ -368,7 +372,8 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 	cv::Mat leftFaceImg = cv::Mat(resizedFrame, lFace);
 	cv::Mat rightFaceImg = cv::Mat(resizedFrame, rFace);
 
-	//leftFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/inputForMask2.png");
+	leftFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l1.png");
+	rightFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l2.png");
 	cv::Mat leftMask = findMask(leftFaceImg);
 	cv::Mat rightMask = findMask(rightFaceImg);
 

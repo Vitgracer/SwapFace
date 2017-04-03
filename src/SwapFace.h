@@ -18,7 +18,7 @@ private:
 	cv::Mat segmentFace(cv::Mat src);
 	cv::Mat findMask(cv::Mat face);
 
-	cv::Mat copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst);
+	std::pair<cv::Mat, cv::Mat> copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst);
 
 	float getDist(cv::Point& p1, cv::Point& p2);
 	cv::Point findClosesPoint(cv::Point& p, std::vector<cv::Point>& contour);
