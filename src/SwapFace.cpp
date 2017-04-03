@@ -372,8 +372,8 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 	cv::Mat leftFaceImg = cv::Mat(resizedFrame, lFace);
 	cv::Mat rightFaceImg = cv::Mat(resizedFrame, rFace);
 
-	leftFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l1.png");
-	rightFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l2.png");
+	//leftFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l1.png");
+	//rightFaceImg = cv::imread("C:/Users/Alfred/Desktop/SwapFace/testData/l2.png");
 	cv::Mat leftMask = findMask(leftFaceImg);
 	cv::Mat rightMask = findMask(rightFaceImg);
 
