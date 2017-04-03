@@ -408,8 +408,8 @@ void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
 		usualStitched = up + laplStitched[i];
 	}
 	usualStitched.convertTo(usualStitched, CV_8UC3, 255);
-	cv::resize(usualStitched, usualStitched, cv::Size(src.cols, src.rows));
-	src = usualStitched.clone();
+	cv::resize(usualStitched, usualStitched, cv::Size(fullFrame.cols, fullFrame.rows));
+	resultFrame = usualStitched.clone();
 }
 
 //////////////////////////////////
@@ -421,7 +421,16 @@ cv::Mat SwapFace::run() {
 
 	if (faces.size() != 2) 
 		return resizedFrame;
+	
+	cv::Rect lFace = faces[0];
+	cv::Rect rFace = faces[1];
 
+	if (faces[0].x > faces[1].x) {
+		lFace = faces[1];
+		lFace = faces[0];
+	}	
 
-	return cv::Mat();
+	swapFace(lFace, rFace);
+
+	return resultFrame;
 }
