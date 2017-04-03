@@ -6,3 +6,6 @@
 #else 
 #define IMAGE_PATH                        "C:/Users/Alfred/Desktop/SwapFace/testData/1.jpg"
 #endif
+
+// debug parameters 
+#define VISUALIZATION			          (1)
