@@ -15,7 +15,7 @@ private:
 	std::vector<std::pair<cv::Rect, cv::Mat>> buildGaussianPyr(cv::Rect rect, cv::Mat mask, int pyrLevel);
 	std::vector<cv::Mat> buildLaplPyr(std::vector<cv::Mat> gaussPyr, int pyrLevel);
 	
-	cv::Mat segmentFace(cv::Mat src, cv::Mat ellipse);
+	cv::Mat segmentFace(cv::Mat src);
 	cv::Mat findMask(cv::Mat face);
 
 	cv::Mat copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst);

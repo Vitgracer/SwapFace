@@ -23,3 +23,6 @@
 #define SCALE_FACTOR        (1.1)
 #define MIN_NEIGHBOURS      (2)
 #define WINDOW_SIZE         (100)
+
+#define CLUSTER_COUNT       (2)
+#define CLUSTER_ATTEMPTS    (1)

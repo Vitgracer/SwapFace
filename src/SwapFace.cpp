@@ -96,10 +96,9 @@ std::vector<cv::Mat> SwapFace::buildLaplPyr(std::vector<cv::Mat> gaussPyr, int p
 // Brief description: 
 // KMeans using to extract skin region 
 ///////////////////////////////////////
-cv::Mat SwapFace::segmentFace(cv::Mat src, cv::Mat ellipse) {
+cv::Mat SwapFace::segmentFace(cv::Mat src) {
 	cv::Mat samples(src.rows * src.cols, 3, CV_32F);
 	for (int y = 0; y < src.rows; y++) {
-		uchar* dataEllipse = ellipse.data + ellipse.step.buf[0] * y;
 
 		for (int x = 0; x < src.cols; x++) {
 			for (int z = 0; z < 3; z++) {
@@ -108,11 +107,11 @@ cv::Mat SwapFace::segmentFace(cv::Mat src, cv::Mat ellipse) {
 		}
 	}
 
-	int clusterCount = 2;
-	int attempts = 1;
 	cv::Mat centers;
 	cv::Mat labels;
-	kmeans(samples, clusterCount, labels, cv::TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10000, 0.0001), attempts, cv::KMEANS_PP_CENTERS, centers);
+	kmeans(samples, CLUSTER_COUNT, labels, 
+		   cv::TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10000, 0.0001), 
+		   CLUSTER_ATTEMPTS, cv::KMEANS_PP_CENTERS, centers);
 
 	cv::Mat resMask(src.size(), CV_8UC1);
 	for (int y = 0; y < src.rows; y++) {
@@ -126,6 +125,9 @@ cv::Mat SwapFace::segmentFace(cv::Mat src, cv::Mat ellipse) {
 	// check if inverse needed
 	int whites = 0;
 	int blacks = 0;
+
+	cv::Mat ellipse = cv::Mat(src.rows, src.cols, CV_8UC1, cv::Scalar(0));
+	cv::ellipse(ellipse, cv::RotatedRect(cv::Point(ellipse.cols / 2, ellipse.rows / 2), cv::Size(3 * ellipse.cols / 4, ellipse.rows), 0), cv::Scalar(255), -1);
 
 	for (int y = 0; y < src.rows; y++) {
 		uchar* dataMask = resMask.data + resMask.step.buf[0] * y;
@@ -159,9 +161,7 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	bgr[0] = 0;
 	cv::merge(bgr, 3, face);
 
-	cv::Mat ellipse = cv::Mat(face.rows, face.cols, CV_8UC1, cv::Scalar(0));
-	cv::ellipse(ellipse, cv::RotatedRect(cv::Point(ellipse.cols / 2, ellipse.rows / 2), cv::Size(3 * ellipse.cols / 4, ellipse.rows), 0), cv::Scalar(255), -1);
-	cv::Mat resMask = segmentFace(face, ellipse);
+	cv::Mat resMask = segmentFace(face);
 
 	int maxLength = 0;
 	int maxInd = 0;
@@ -274,6 +274,7 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 
 	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11, 11));
 	morphologyEx(maskSrc, maskSrc, cv::MORPH_ERODE, element);
+	morphologyEx(maskDst, maskDst, cv::MORPH_ERODE, element);
 
 	//cv::Mat fitted = fitOneImgToAnother(imgSrc, imgDst, maskSrc, maskDst);
 
@@ -284,9 +285,9 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 
 	std::vector<std::vector<cv::Point> > contoursSrc;
 	cv::findContours(maskSrc, contoursSrc, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-
-	//std::vector<std::vector<cv::Point> > contoursDst;
-	//cv::findContours(maskDst, contoursDst, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+	if (contoursSrc.size() == 0) {
+		return imgSrc;
+	}
 
 	cv::Mat blackMask = cv::Mat(stretchedFace.size(), CV_8UC1, cv::Scalar(0));
 
@@ -334,24 +335,22 @@ std::pair<cv::Mat, cv::Mat> SwapFace::fitImagesToEachOther(cv::Mat leftImg, cv::
 // main algorithm to swap faces 
 ////////////////////////////////
 void SwapFace::swapFace(cv::Rect lFace, cv::Rect rFace) {
-	cv::Mat img = resizedFrame.clone();	
-
-	cv::Mat leftFaceImg = cv::Mat(img, lFace);
-	cv::Mat rightFaceImg = cv::Mat(img, rFace);
+	cv::Mat leftFaceImg = cv::Mat(resizedFrame, lFace);
+	cv::Mat rightFaceImg = cv::Mat(resizedFrame, rFace);
 
 	cv::Mat leftMask = findMask(leftFaceImg);
 	cv::Mat rightMask = findMask(rightFaceImg);
 
 	auto fittedImages = fitImagesToEachOther(leftFaceImg, rightFaceImg, leftMask, rightMask);
 
-	cv::Mat comb = img.clone();
+	cv::Mat comb = resizedFrame.clone();
 	fittedImages.first.copyTo(comb(rFace), rightMask);
 	fittedImages.second.copyTo(comb(lFace), leftMask);
 
-	img.convertTo(img, CV_32F, 1.0 / 255.0);
+	resizedFrame.convertTo(resizedFrame, CV_32F, 1.0 / 255.0);
 	comb.convertTo(comb, CV_32F, 1.0 / 255.0);
 
-	auto gpSrc = buildGaussianPyr(img);
+	auto gpSrc = buildGaussianPyr(resizedFrame);
 	auto lpSrc = buildLaplPyr(gpSrc);
 
 	auto gpComb = buildGaussianPyr(comb);
