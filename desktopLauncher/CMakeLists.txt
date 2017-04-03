@@ -11,7 +11,7 @@ set(SRC
 add_executable(${LAUNCHER_NAME} ${SRC})
 
 include_directories(
-    ${TextRecognizer_SOURCE_DIR}
+    ${SwapFace_SOURCE_DIR}
 )
 
 target_link_libraries(${LAUNCHER_NAME} 

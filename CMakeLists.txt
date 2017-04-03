@@ -32,4 +32,4 @@ endif()
 find_package(OpenCV REQUIRED)
 
 add_subdirectory(src)
-add_subdirectory(launcher)
+add_subdirectory(desktopLauncher)

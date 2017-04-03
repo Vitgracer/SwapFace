@@ -9,7 +9,7 @@ set(SRC
 )
 
 set(HDR 
-    ${SRC_DIR}/SwapFace.h
+    ${SRC_DIR}/GlobalParams.h
     ${SRC_DIR}/SwapFace.h
 )
 
