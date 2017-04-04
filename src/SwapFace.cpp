@@ -146,35 +146,27 @@ cv::Mat SwapFace::segmentFace(cv::Mat src) {
 	return resMask;
 }
 
-cv::Mat performHistAnalysis(cv::Mat& src, cv::Mat mask, const int delta = 40) {
-	int bins = 256;
-
-	int histSize[] = { bins };
-	float range[] = { 0, 256 };
-
-	const float* ranges[] = { range };
-	cv::MatND hist;
-
-	int channels[] = { 0 };
-
-	cv::calcHist(&src, 1, channels, mask,
-		hist, 1, histSize, ranges,
-		true,
-		false);
-
-	double maxVal = 0;
-	cv::Point maxP(0, 0);
-	cv::minMaxLoc(hist, 0, &maxVal, 0, &maxP);
+////////////////////////////////////
+// Brief description: 
+// use 3sigma rule for segmentation  
+////////////////////////////////////
+cv::Mat SwapFace::perform3SigmaRule(cv::Mat& src, cv::Mat mask) {
+	cv::Scalar mean, std;
+	cv::meanStdDev(src, mean, std, mask);
 
 	cv::Mat maskChannel1, maskChannel2, maskUpd;
-	cv::threshold(src, maskChannel1, maxP.y - delta, 255, cv::THRESH_BINARY);
-	cv::threshold(src, maskChannel2, maxP.y + delta, 255, cv::THRESH_BINARY_INV);
+	cv::threshold(src, maskChannel1, mean[0] - 2 * std[0], 255, cv::THRESH_BINARY);
+	cv::threshold(src, maskChannel2, mean[0] + 2 * std[0], 255, cv::THRESH_BINARY_INV);
 	cv::bitwise_and(maskChannel1, maskChannel2, maskUpd);
 
 	return maskUpd;
 }
 
-cv::Mat processMask(cv::Mat src) {
+/////////////////////////////////////////
+// Brief description: 
+// split matrix and process each channel 
+/////////////////////////////////////////
+cv::Mat SwapFace::getStatisticsMask(cv::Mat src) {
 	cv::Mat mask = cv::Mat(src.rows, src.cols, CV_8UC1, cv::Scalar(0));
 	cv::ellipse(mask, cv::RotatedRect(cv::Point(mask.cols / 2, mask.rows / 2), 
 				      cv::Size(mask.cols / 2, 3 * mask.rows / 4), 0), cv::Scalar(255), -1);
@@ -184,9 +176,9 @@ cv::Mat processMask(cv::Mat src) {
 	cv::Mat bgr[3];
 	split(hsvSRC, bgr);
 
-	cv::Mat mask1 = performHistAnalysis(bgr[0], mask);
-	cv::Mat mask2 = performHistAnalysis(bgr[1], mask);
-	cv::Mat mask3 = performHistAnalysis(bgr[2], mask);
+	cv::Mat mask1 = perform3SigmaRule(bgr[0], mask);
+	cv::Mat mask2 = perform3SigmaRule(bgr[1], mask);
+	cv::Mat mask3 = perform3SigmaRule(bgr[2], mask);
 
 	cv::Mat combMask;
 	cv::bitwise_and(mask1, mask2, mask2);
@@ -205,8 +197,8 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	cv::resize(face, face, cv::Size(srcW / 4, srcH / 4), 0, 0, cv::INTER_NEAREST);
 
 	cv::Mat resMask = segmentFace(face);
-	//cv::Mat updMask = processMask(face);
-	//cv::bitwise_and(resMask, updMask, resMask);
+	cv::Mat statisticsMask = getStatisticsMask(face);
+	cv::bitwise_and(resMask, statisticsMask, resMask);
 
 	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
 	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
