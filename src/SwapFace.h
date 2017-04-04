@@ -19,6 +19,7 @@ private:
 	cv::Mat findMask(cv::Mat face);
 	cv::Mat getStatisticsMask(cv::Mat src);
 	cv::Mat perform3SigmaRule(cv::Mat& src, cv::Mat mask);
+	void clarifyBorders(cv::Mat face, cv::Mat& mask, int iterations);
 
 	std::pair<cv::Mat, cv::Mat> copySrcToDstUsingMask(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, cv::Mat maskDst);
 

@@ -187,6 +187,49 @@ cv::Mat SwapFace::getStatisticsMask(cv::Mat src) {
 	return combMask;
 }
 
+/////////////////////////////////////////
+// Brief description: 
+// walk iteratively through mask and cut 
+// borders out of statisctics 
+/////////////////////////////////////////
+void SwapFace::clarifyBorders(cv::Mat face, cv::Mat& mask, const int iterations = 7) {
+	cv::Scalar mean, std;
+	cv::meanStdDev(face, mean, std, mask);
+
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
+
+	for (int i = 0; i < iterations; i++) {
+		cv::Mat eroded;
+		morphologyEx(mask, eroded, cv::MORPH_ERODE, element);
+		cv::Mat diff = mask - eroded;
+
+		for (int y = 0; y < mask.rows; y++) {
+			uchar* dataMask = mask.data + mask.step.buf[0] * y;
+			uchar* dataDiff = diff.data + diff.step.buf[0] * y;
+
+			for (int x = 0; x < mask.cols; x++) {
+				if (dataDiff[x] == 255) {
+					bool goodPixel = true;
+
+					for (int channel = 0; channel < 3; channel++) {
+						const float leftBorder  = mean[channel] - 1.0 * std[channel];
+						const float rightBorder = mean[channel] + 1.0 * std[channel];
+						
+						if (face.at<cv::Vec3b>(y, x)[channel] > rightBorder ||
+							face.at<cv::Vec3b>(y, x)[channel] < leftBorder) {
+							goodPixel = false;
+							break;
+						}
+					}
+
+					if (!goodPixel) 
+						dataMask[x] = 0;
+				}
+			}
+		}
+	}
+}
+
 ///////////////////////////////////////
 // Brief description: 
 // Find sking region and postprocess it 
@@ -237,6 +280,8 @@ cv::Mat SwapFace::findMask(cv::Mat face) {
 	cv::Mat restrictionEllipse = cv::Mat(resMask.rows, resMask.cols, CV_8UC1, cv::Scalar(0));
 	cv::ellipse(restrictionEllipse, cv::RotatedRect(cv::Point(resMask.cols / 2, resMask.rows / 2), cv::Size(resMask.cols - 6, resMask.rows - 6), 0), cv::Scalar(255), -1);
 	cv::bitwise_and(restrictionEllipse, resMask, resMask);
+
+	clarifyBorders(face, resMask);
 
 	return resMask;
 }
@@ -306,10 +351,6 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	cv::resize(maskSrc, maskSrc, maskDst.size(), cv::INTER_NEAREST);
 	maskSrc *= 255;
 
-	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
-	morphologyEx(maskSrc, maskSrc, cv::MORPH_ERODE, element);
-	morphologyEx(maskDst, maskDst, cv::MORPH_ERODE, element);
-
 	cv::Mat cuttedFace = cv::Mat(imgSrc.size(), CV_8UC1);
 	imgSrc.copyTo(cuttedFace, maskSrc);
 
@@ -317,32 +358,7 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	cv::Mat stretchedFace = stretched.first;
 	cv::Mat blackMask = stretched.second;
 
-	std::vector<std::vector<cv::Point> > contoursSrc;
-	cv::findContours(maskSrc, contoursSrc, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-	if (contoursSrc.size() == 0) {
-		return imgSrc;
-	}
-
-	for (int y = 0; y < stretchedFace.rows; y++) {
-		for (int x = 0; x < stretchedFace.cols; x++) {
-			cv::Point curPoint(x, y);
-
-			if (blackMask.at<uchar>(y, x) == 255) {
-
-				cv::Point closestToSrc = findClosesPoint(curPoint, contoursSrc[0]);
-				
-				cv::Scalar color = cv::Scalar(cuttedFace.at<cv::Vec3b>(closestToSrc).val[0],
-					cuttedFace.at<cv::Vec3b>(closestToSrc).val[1],
-					cuttedFace.at<cv::Vec3b>(closestToSrc).val[2]);
-
-				cv::circle(stretchedFace, curPoint, 0, color, -1);
-			}
-		}
-	}
-
-	cv::Mat stretchedClone = stretchedFace.clone();
-	cv::GaussianBlur(stretchedClone, stretchedClone, cv::Size(11, 11), 3, 3);
-	stretchedClone.copyTo(stretchedFace, blackMask);
+	cv::inpaint(stretchedFace, blackMask, stretchedFace, 5, cv::INPAINT_NS);
 
 	return stretchedFace;
 }
