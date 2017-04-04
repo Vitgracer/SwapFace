@@ -4,14 +4,14 @@
 #ifdef VIDEO_MODE
 #define CAMERA_INDEX        (0)
 #else 
-#define IMAGE_PATH          "C:/Users/Alfred/Desktop/SwapFace/testData/3.jpg"
+#define IMAGE_PATH          "C:/Users/Alfred/Desktop/SwapFace/testData/4.jpg"
 #endif
 
 // resources 
 #define CASCADE_PATH        "C:/Users/Alfred/Desktop/SwapFace/res/haarcascade_frontalface_default.xml"
 
 // debug parameters 
-#define VISUALIZATION	    (1)
+#define VISUALIZATION	    (0)
 
 // resize parameters 
 #define WIDTH               (640)
