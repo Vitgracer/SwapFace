@@ -192,17 +192,16 @@ cv::Mat SwapFace::getStatisticsMask(cv::Mat src) {
 // Find sking region and postprocess it 
 ///////////////////////////////////////
 cv::Mat SwapFace::findMask(cv::Mat face) {
-	int srcW = face.cols;
-	int srcH = face.rows;
-	cv::resize(face, face, cv::Size(srcW / 4, srcH / 4), 0, 0, cv::INTER_NEAREST);
+	cv::Mat faceResized;
+	cv::resize(face, faceResized, cv::Size(face.cols / 4, face.rows / 4), 0, 0, cv::INTER_NEAREST);
 
-	cv::Mat resMask = segmentFace(face);
-	cv::Mat statisticsMask = getStatisticsMask(face);
-	cv::bitwise_and(resMask, statisticsMask, resMask);
-
-	cv::resize(resMask, resMask, cv::Size(srcW, srcH), 0, 0, cv::INTER_NEAREST);
+	cv::Mat resMask = segmentFace(faceResized);
+	cv::resize(resMask, resMask, cv::Size(face.cols, face.rows), 0, 0, cv::INTER_NEAREST);
 	cv::GaussianBlur(resMask, resMask, cv::Size(11, 11), 5, 5);
 	cv::threshold(resMask, resMask, 128, 255, cv::THRESH_BINARY);
+
+	cv::Mat statisticsMask = getStatisticsMask(face);
+	cv::bitwise_and(resMask, statisticsMask, resMask);
 
 	int maxLength = 0;
 	int maxInd = 0;
@@ -306,6 +305,10 @@ cv::Mat SwapFace::stretchFace(cv::Mat imgSrc, cv::Mat imgDst, cv::Mat maskSrc, c
 	cv::resize(imgSrc, imgSrc, imgDst.size(), cv::INTER_NEAREST);
 	cv::resize(maskSrc, maskSrc, maskDst.size(), cv::INTER_NEAREST);
 	maskSrc *= 255;
+
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
+	morphologyEx(maskSrc, maskSrc, cv::MORPH_ERODE, element);
+	morphologyEx(maskDst, maskDst, cv::MORPH_ERODE, element);
 
 	cv::Mat cuttedFace = cv::Mat(imgSrc.size(), CV_8UC1);
 	imgSrc.copyTo(cuttedFace, maskSrc);
