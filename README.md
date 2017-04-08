@@ -12,10 +12,10 @@ Algorithm is based:
 Some results:  
 
 Test1: 
-https://cloud.githubusercontent.com/assets/6626844/24827377/e8e22b2c-1c50-11e7-8a46-29ab34951b7d.jpg
+![Alt text](https://cloud.githubusercontent.com/assets/6626844/24827377/e8e22b2c-1c50-11e7-8a46-29ab34951b7d.jpg "Test1")
 
 Test2: 
-![Alt text](https://cloud.githubusercontent.com/assets/6626844/24827379/ead24afc-1c50-11e7-9b11-ca92ecc7fee3.jpg "Optional title")
+![Alt text](https://cloud.githubusercontent.com/assets/6626844/24827379/ead24afc-1c50-11e7-9b11-ca92ecc7fee3.jpg "Test2")
 
 Test3:
-https://cloud.githubusercontent.com/assets/6626844/24827380/ec0c224e-1c50-11e7-9f9c-acb7f6e9d8a4.png
+![Alt text](https://cloud.githubusercontent.com/assets/6626844/24827380/ec0c224e-1c50-11e7-9f9c-acb7f6e9d8a4.png "Test3")
