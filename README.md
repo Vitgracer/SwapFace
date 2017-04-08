@@ -7,7 +7,7 @@ Cmake configuration allows to turn on button to work with:
 
 Algorithm is based: 
 1. On Laplacian Pyramid blending for image stitching 
-2. Kmeans clusterization technique and histogram statistics for ckin mask extraction.
+2. Kmeans clusterization technique and histogram statistics for skin mask extraction.
 
 Some results:  
 
