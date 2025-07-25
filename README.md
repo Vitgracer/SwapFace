@@ -1,4 +1,5 @@
-![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=vitgracer.SwapFace)
+![](https://api.visitorbadge.io/api/VisitorHit?user=Vitgracer&repo=SwapFace&countColor=%237B1E7A)
+
 # SwapFace
 ** App to Swap two Faces in one photo **
 
