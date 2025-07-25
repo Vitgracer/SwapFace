@@ -1,3 +1,4 @@
+![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=vitgracer.SwapFace)
 # SwapFace
 ** App to Swap two Faces in one photo **
 
